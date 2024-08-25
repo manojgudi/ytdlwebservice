@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit URLs</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .container {
+            text-align: center;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 80%;
+            max-width: 600px;
+        }
+        input[type="text"] {
+            padding: 10px;
+            margin-bottom: 10px;
+            width: 80%;
+            font-size: 1rem;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        input[type="submit"], .download-btn {
+            padding: 10px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 20px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .progress {
+            margin-top: 20px;
+            text-align: left;
+            width: 80%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .progress-bar {
+            background-color: #4caf50;
+            height: 20px;
+            width: 0;
+            text-align: center;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Enter YouTube URLs</h2>
+        <form method="POST">
+            <div id="url-container">
+                <input type="text" name="url" placeholder="Enter YouTube URL" required>
+            </div>
+            <button onclick="addUrlField()">Add another URL</button>
+
+            <input type="submit" value="Submit URLs">
+        </form>
+
+        <div id="progress-container" class="progress"></div>
+
+        <div id="download-links" class="progress"></div>
+    </div>
+
+    <script>
+        function addUrlField() {
+            var container = document.getElementById('url-container');
+            var input = document.createElement('input');
+            input.type = 'text';
+            input.name = 'url';
+            input.placeholder = 'Enter YouTube URL';
+            container.appendChild(input);
+        }
+
+        function fetchProgress() {
+            fetch('/progress')
+                .then(response => response.json())
+                .then(data => {
+                    var progressContainer = document.getElementById('progress-container');
+                    progressContainer.innerHTML = '';  // Clear previous progress
+
+                    var downloadLinksContainer = document.getElementById('download-links');
+                    downloadLinksContainer.innerHTML = '';  // Clear previous download links
+
+                    var index = 1;
+                    for (var url in data) {
+                        var progressText = document.createElement('p');
+                        progressText.innerHTML = `Download ${index}: ${data[url]['progress']}`;
+                        progressContainer.appendChild(progressText);
+
+                        if (data[url]['filename'] && data[url]['progress'] === 'Completed') {
+                            var downloadLink = document.createElement('a');
+                            downloadLink.href = `/download/${encodeURIComponent(data[url]['filename'])}`;
+                            downloadLink.innerHTML = `Download ${index} - ${data[url]['filename']}`;
+                            downloadLink.className = 'download-btn';
+                            downloadLinksContainer.appendChild(downloadLink);
+                        }
+
+                        index++;
+                    }
+                });
+        }
+
+        // Fetch progress every 2 seconds
+        setInterval(fetchProgress, 2000);
+    </script>
+</body>
+</html>
